@@ -1,0 +1,47 @@
+# Levanta todo el proyecto: base de datos + backend + frontend.
+#   docker compose up --build
+# Tienda: http://localhost:3000   ·   API: http://localhost:8080/api/products
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: terra
+      POSTGRES_USER: terra
+      POSTGRES_PASSWORD: terra
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U terra"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/terra
+      DB_USER: terra
+      DB_PASSWORD: terra
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-in-production-0123456789}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@terracreaciones.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-cambiame-ya-123}
+      CORS_ORIGINS: http://localhost:3000
+      UPLOADS_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  uploads:

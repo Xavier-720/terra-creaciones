@@ -1,105 +1,116 @@
-# Terra Creaciones · Tejiendo sueños
+# Terra Creaciones · Tejiendo sueños 🧶
 
-Tienda web de bolsos, carteras y otros tejidos a mano, con catálogo, cuentas de clientes y panel de administración.
+Tienda web moderna para catálogo y venta de productos tejidos a mano (bolsos, carteras, amigurumis y accesorios), con integración a Supabase (Auth, Database y Storage), panel de administración interactivo y enlace directo para consultas y pedidos vía WhatsApp.
 
-## Arquitectura
+---
 
-```
+## 🌟 Características Principales
+
+- **Catálogo Interactivo:** Navegación por categorías con íconos personalizados, filtros por categoría y visualización de variantes de color con previsualización ilustrada o fotográfica.
+- **Consultas por WhatsApp en 1 Clic:** Botones con mensaje preformateado dinámico según el producto consultado (`wa.me`), adaptado con el formato internacional de Argentina (+54 9 ...).
+- **Panel de Administración (CRUD completo):**
+  - **Productos:** Crear, editar, alternar destacados para la portada y eliminar (con borrado en cascada de características y variantes de color).
+  - **Categorías con selector de íconos:** Creación y edición con selector visual de emojis interactivo.
+  - **Paleta de colores:** Selector interactivo de color (HEX) para asociar a los tejidos.
+  - **Configuración del local:** Edición de número de WhatsApp, dirección física y horarios de atención.
+- **Autenticación Nativa y Seguridad (Supabase Auth & RLS):**
+  - Registro e inicio de sesión de usuarios.
+  - Políticas de seguridad a nivel de fila (*Row Level Security* - RLS): lectura pública para visitantes de la tienda y permisos de escritura/modificación restringidos exclusivamente al rol `ADMIN`.
+- **Diseño Responsivo y Artesanal:** Tipografía cuidada (*Cormorant Garamond* y *Nunito*), soporte para modo claro/oscuro y marcas de agua ilustradas de ovillos y huellitas en el fondo.
+
+---
+
+## 🛠️ Tecnologías Utilizadas
+
+| Capa | Tecnologías |
+|---|---|
+| **Frontend** | React 18, TypeScript, Vite, React Router 6, TanStack Query (React Query) |
+| **Backend & Base de Datos** | Supabase (PostgreSQL 16, PostgREST API, Supabase Auth, Supabase Storage) |
+| **Backend Alternativo (Opcional)** | Java 25, Spring Boot 3.5, Spring Security, JWT, Flyway, Maven, Docker |
+| **Estilos** | CSS3 nativo moderno con variables, diseño responsivo y sin dependencias pesadas |
+
+---
+
+## 📁 Estructura del Repositorio
+
+```text
 terra-creaciones/
-├── backend/    API REST · Java 25 + Spring Boot 3 + PostgreSQL
-├── frontend/   SPA · React 18 + TypeScript + Vite
-└── docker-compose.yml
+├── frontend/                     # Aplicación SPA (React + TypeScript + Vite)
+│   ├── src/
+│   │   ├── api/                  # Clientes de Supabase y hooks de React Query
+│   │   ├── components/           # Componentes UI reutilizables (Layout, Cards, Icons...)
+│   │   ├── context/              # Proveedor de autenticación (AuthContext)
+│   │   ├── pages/                # Vistas: Inicio, Categoría, Detalle de Producto, Login
+│   │   │   └── admin/            # Panel administrativo (Productos, Categorías, Colores, Local)
+│   │   └── types.ts              # Definiciones TypeScript del modelo de negocio
+│   ├── .env.example              # Variables de entorno modelo para el frontend
+│   └── package.json
+├── backend/                      # API REST opcional en Spring Boot / Java
+│   ├── src/
+│   └── pom.xml
+├── supabase-schema.sql           # Script SQL completo: tablas, RLS, Storage y datos semilla
+├── docker-compose.yml            # Orquestación con Docker (si se utiliza con backend Java)
+└── README.md
 ```
 
-| Capa | Tecnologías | Por qué |
-|------|-------------|---------|
-| Backend | Java 25, Spring Boot 3.5, Spring Security + JWT, Spring Data JPA, Flyway, Bean Validation | Es el stack de backend más pedido en el mercado laboral; el diseño en capas es el estándar de la industria. |
-| Base de datos | PostgreSQL 16 | Base relacional estándar; gratis en Neon, Supabase o Render. |
-| Frontend | React 18, TypeScript, Vite, React Router, TanStack Query | React + TypeScript es lo más solicitado en frontend; Vite da builds rápidos. |
-| Infra | Docker, docker compose, nginx | Mismo entorno en tu máquina y en producción. |
+---
 
-### Backend (`backend/src/main/java/com/terracreaciones`)
+## 🚀 Puesta en Marcha en Desarrollo
 
-```
-config/      seguridad (SecurityConfig), CORS, archivos subidos, admin inicial
-security/    emisión y validación de JWT
-domain/      entidades JPA (Product, Category, Color, AppUser, SiteSettings)
-repository/  acceso a datos (Spring Data)
-service/     lógica de negocio (CatalogService, AuthService)
-web/         controladores REST y manejo de errores
-dto/         contratos de la API (records con validación)
-```
+### Prerrequisitos
+- [Node.js](https://nodejs.org/) (versión 18 o superior)
+- Un proyecto gratuito en [Supabase](https://supabase.com)
 
-Migraciones en `src/main/resources/db/migration` (Flyway): `V1` crea el esquema y `V2` carga los datos de ejemplo.
+### 1. Configurar Supabase
+1. Ingresá a tu proyecto en Supabase y abrí el **SQL Editor**.
+2. Copiá y pegá el contenido del archivo [`supabase-schema.sql`](./supabase-schema.sql) y ejecutalo con **Run**. Esto creará:
+   - Las tablas: `categories`, `colors`, `products`, `product_features`, `product_colors`, `site_settings`.
+   - Las políticas RLS de lectura pública y escritura para administradores.
+   - El bucket de almacenamiento `product-images` para las fotos.
+   - Los datos de ejemplo iniciales.
 
-### Frontend (`frontend/src`)
+### 2. Configurar las Variables de Entorno del Frontend
+En la carpeta `frontend/`, creá un archivo `.env` basándote en `.env.example`:
 
-```
-api/         cliente HTTP y hooks de datos (TanStack Query)
-context/     sesión del usuario (AuthContext)
-components/  Layout, ProductCard, ProductVisual, Watermarks, BackButton...
-pages/       Home, Category, Product, Login y admin/ (panel de administración)
+```env
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu_clave_publica_anon_de_supabase
 ```
 
-## Cómo correrlo
-
-### Opción 1: todo con Docker
-
+### 3. Instalar dependencias e iniciar el Frontend
 ```bash
-cp .env.example .env     # editá ADMIN_EMAIL, ADMIN_PASSWORD y JWT_SECRET
-docker compose up --build
-```
-
-Tienda en http://localhost:3000 · API en http://localhost:8080.
-
-### Opción 2: desarrollo
-
-```bash
-# 1) Base de datos
-docker compose up db -d
-
-# 2) Backend (Java 25 y Maven)
-cd backend
-ADMIN_EMAIL=admin@terracreaciones.com ADMIN_PASSWORD=cambiame-ya-123 mvn spring-boot:run
-
-# 3) Frontend (Node 20)
 cd frontend
 npm install
-npm run dev              # http://localhost:5173
+npm run dev
 ```
 
-La cuenta de administrador se crea sola al primer arranque con `ADMIN_EMAIL` y `ADMIN_PASSWORD`. Ingresá desde "👤 Ingresar" y aparece el botón "⚙️ Admin".
+Abrí [http://localhost:5173](http://localhost:5173) en tu navegador para ver la tienda en vivo.
 
-## API
+---
 
-| Método | Ruta | Acceso |
-|--------|------|--------|
-| POST | `/api/auth/register`, `/api/auth/login` | público |
-| GET | `/api/auth/me` | sesión iniciada |
-| GET | `/api/categories`, `/api/colors`, `/api/products`, `/api/products/{slug}`, `/api/settings` | público |
-| POST/PUT/DELETE | `/api/admin/categories`, `/api/admin/colors`, `/api/admin/products` | ADMIN |
-| PUT | `/api/admin/settings` | ADMIN |
-| POST | `/api/admin/uploads` (foto JPG/PNG/WebP, máx. 5 MB) | ADMIN |
+## 👤 Gestión de Administradores
 
-## Seguridad
+1. En la tienda web, ingresá a **👤 Ingresar** -> pestaña **Soy nuevo** y registrate con tu correo electrónico.
+2. En el **SQL Editor** de tu panel de Supabase, asignate el rol de Administrador ejecutando:
+   ```sql
+   UPDATE auth.users
+   SET raw_app_meta_data = raw_app_meta_data || '{"role": "ADMIN"}'::jsonb
+   WHERE email = 'tu_email@ejemplo.com';
+   ```
+3. Cerrá sesión y volvé a ingresar en la web: aparecerá el botón **⚙️ Admin** en el menú superior con acceso a todo el panel de control.
 
-- Contraseñas con BCrypt; sesión con JWT sin estado (24 h).
-- Los clientes se registran solo con rol `USER`: el rol `ADMIN` únicamente se crea desde las variables de entorno.
-- Las rutas `/api/admin/**` exigen rol `ADMIN` en el servidor, no solo en la interfaz.
-- En producción definí un `JWT_SECRET` propio y largo, y `CORS_ORIGINS` con el dominio real del frontend.
+---
 
-## Publicarlo gratis (opciones habituales)
+## 📦 Despliegue en Producción (Frontend)
 
-- **Frontend:** Cloudflare Pages, Netlify o Vercel (build `npm run build`, carpeta `dist`, variable `VITE_API_URL` con la URL del backend).
-- **Backend:** Render, Railway o Fly.io usando `backend/Dockerfile`.
-- **Base de datos:** Neon o Supabase (PostgreSQL): copiá la cadena de conexión en `DB_URL`, `DB_USER` y `DB_PASSWORD`.
+Podés desplegar el frontend gratis en plataformas como **Vercel**, **Netlify** o **Cloudflare Pages**:
+- **Root Directory:** `frontend`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Variables de Entorno:** Agregar `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
 
-Los planes gratuitos cambian con el tiempo: revisá las condiciones vigentes antes de elegir.
+---
 
-Las fotos se guardan en disco (`UPLOADS_DIR`). En servicios con disco efímero conviene pasar a un almacenamiento externo (Cloudinary, S3 o Supabase Storage).
+## 📄 Licencia
 
-## Próximos pasos sugeridos
-
-- Tests de integración con Testcontainers.
-- Carrito y pedidos.
-- Almacenamiento de imágenes en la nube.
+Este proyecto se distribuye bajo la licencia MIT. Realizado con dedicación para **Terra Creaciones**.

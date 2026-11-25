@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useCategories, useSettings } from '../api/hooks';
 import { useAuth } from '../context/AuthContext';
 import { isAdmin, mapsLink, userDisplayName, userInitials, waLink } from '../lib';
+import ThemeToggle from './ThemeToggle';
 import Watermarks from './Watermarks';
 
 // Muestra el menú, el contenido de cada página y el pie con los datos del local.
@@ -66,6 +67,7 @@ export default function Layout() {
             {isAdmin(user) && <NavLink to="/admin" className={({ isActive }) => `pill${isActive ? ' on' : ''}`}>⚙️ Admin</NavLink>}
           </nav>
           <div className="nav-actions">
+            <ThemeToggle />
             {user ? (
               <div className="account" ref={accountRef}>
                 <button

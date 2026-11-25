@@ -1,4 +1,6 @@
 import { supabase } from './supabaseClient';
+import { EXTRA_COLORS } from '../colors';
+import { SHOWCASE_EXAMPLES } from '../examples';
 import type { Category, ColorT, Product, Settings, Shape } from '../types';
 
 // Normaliza texto para crear slugs legibles en URL (ej: "Bolsos de mano" -> "bolsos-de-mano")
@@ -191,6 +193,17 @@ export async function deleteColor(id: number): Promise<void> {
   if (error) throw error;
 }
 
+/** Carga la paleta extendida sin repetir colores que ya existen. Devuelve cuántos agregó. */
+export async function ensureDefaultColors(): Promise<number> {
+  const existing = await getColors();
+  const used = new Set(existing.map(c => c.name.trim().toLowerCase()));
+  const missing = EXTRA_COLORS.filter(c => !used.has(c.name.toLowerCase()));
+  if (!missing.length) return 0;
+  const { error } = await supabase.from('colors').insert(missing.map(c => ({ name: c.name, hex: c.hex })));
+  if (error) throw error;
+  return missing.length;
+}
+
 // Configuración del sitio
 export async function updateSiteSettings(settings: Settings): Promise<void> {
   const { error } = await supabase.from('site_settings').upsert({
@@ -350,4 +363,57 @@ export async function uploadProductImage(file: File): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+/** Completa el catálogo con 12 ejemplos y marca destacados hasta llegar a 12. */
+export async function ensureShowcaseExamples(): Promise<number> {
+  const [products, categories, colors] = await Promise.all([getProducts(), getCategories(), getColors()]);
+  const categoryIds = new Map(categories.map(c => [c.slug, c.id]));
+  const colorIds = new Map(colors.map(c => [c.name.toLowerCase(), c.id]));
+  let added = 0;
+
+  for (const example of SHOWCASE_EXAMPLES) {
+    if (products.some(p => p.slug === example.slug)) continue;
+    const categoryId = categoryIds.get(example.category);
+    if (!categoryId) continue;
+    const { data, error } = await supabase
+      .from('products')
+      .insert([{
+        slug: example.slug,
+        name: example.name,
+        description: example.description,
+        shape: example.shape,
+        featured: true,
+        category_id: categoryId,
+      }])
+      .select()
+      .single();
+    if (error) throw error;
+    const productId = Number(data.id);
+
+    if (example.features.length) {
+      const { error: featError } = await supabase.from('product_features').insert(
+        example.features.map((feature, position) => ({ product_id: productId, position, feature })),
+      );
+      if (featError) throw featError;
+    }
+    const colorRows = example.colors
+      .map((name, position) => ({ product_id: productId, position, color_id: colorIds.get(name.toLowerCase()) }))
+      .filter((row): row is { product_id: number; position: number; color_id: number } => row.color_id !== undefined);
+    if (colorRows.length) {
+      const { error: colorError } = await supabase.from('product_colors').insert(colorRows);
+      if (colorError) throw colorError;
+    }
+    added++;
+  }
+
+  // Marca destacados los que falten para llegar a 12, sin sacarle el destacado a nadie.
+  const all = await getProducts();
+  const featuredCount = all.filter(p => p.featured).length;
+  const fill = all.filter(p => !p.featured).slice(0, Math.max(0, 12 - featuredCount));
+  for (const product of fill) {
+    const { error } = await supabase.from('products').update({ featured: true }).eq('id', product.id);
+    if (error) throw error;
+  }
+  return added;
 }

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { ensureShowcaseExamples } from '../../api/client';
 import BackButton from '../../components/BackButton';
 import ProductsAdmin from './ProductsAdmin';
 import CategoriesAdmin from './CategoriesAdmin';
@@ -18,6 +19,17 @@ type TabId = (typeof TABS)[number]['id'];
 // Muestra el panel y la lista o el formulario de la sección elegida.
 export default function AdminPage() {
   const [tab, setTab] = useState<TabId>('productos');
+
+  // La primera vez que entra el admin, completa los 12 productos destacados de ejemplo.
+  useEffect(() => {
+    let done = false;
+    try { done = sessionStorage.getItem('terra-showcase-ready') === '1'; } catch { /* sin almacenamiento */ }
+    if (done) return;
+    void ensureShowcaseExamples()
+      .then(() => { try { sessionStorage.setItem('terra-showcase-ready', '1'); } catch { /* ignorar */ } })
+      .catch(() => { /* si falla, se puede usar el botón del panel */ });
+  }, []);
+
   return (
     <div className="adm">
       <BackButton />

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { createColor, updateColor, deleteColor } from '../../api/client';
+import { createColor, updateColor, deleteColor, ensureDefaultColors } from '../../api/client';
 import { useColors, useRefreshCatalog } from '../../api/hooks';
+import { EXTRA_COLORS } from '../../colors';
 import type { ColorT } from '../../types';
 import ConfirmButton from './ConfirmButton';
 
@@ -52,9 +53,24 @@ export default function ColorsAdmin() {
     onError: fail,
   });
 
+  // Carga de una vez la paleta amplia (sin repetir los que ya existen).
+  const loadPalette = useMutation({
+    mutationFn: ensureDefaultColors,
+    onSuccess: (count) => {
+      setMessage(count ? `Se agregaron ${count} colores a la paleta.` : 'La paleta amplia ya está completa.');
+      refresh();
+    },
+    onError: fail,
+  });
+
   return (
     <>
-      <p style={{ margin: '6px 0 14px' }}>Estos son los colores disponibles para asignar a cada producto.</p>
+      <p style={{ margin: '6px 0 14px' }}>Estos son los colores disponibles para asignar a cada producto. Al subir una foto, el panel detecta la paleta automáticamente; acá podés cargar la paleta amplia y corregirla a mano.</p>
+      <div className="row" style={{ marginBottom: 14 }}>
+        <button type="button" className="sm" disabled={loadPalette.isPending} onClick={() => loadPalette.mutate()}>
+          {loadPalette.isPending ? 'Cargando paleta…' : `Agregar paleta amplia (${EXTRA_COLORS.length} colores)`}
+        </button>
+      </div>
       {message && <p className="msg" aria-live="polite">{message}</p>}
       {colors.data?.map(c => <Row key={`${c.id}-${c.name}-${c.hex}`} color={c} onError={fail} onDone={setMessage} />)}
       <div className="item">

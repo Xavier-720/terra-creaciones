@@ -1,0 +1,81 @@
+-- ==============================================================================
+-- PALETA AMPLIADA DE COLORES - TERRA CREACIONES
+-- ==============================================================================
+-- Ejecutar en el SQL Editor de Supabase. Agrega los colores que faltan sin
+-- borrar ni modificar los existentes (tampoco los creados a mano).
+-- ==============================================================================
+
+INSERT INTO colors (name, hex)
+SELECT v.name, v.hex
+FROM (VALUES
+  ('Blanco', '#ffffff'),
+  ('Blanco roto', '#f0ebf3'),
+  ('Marfil', '#f5efe2'),
+  ('Crema', '#fbf3e4'),
+  ('Beige', '#e3d1b8'),
+  ('Arena', '#d9c4a8'),
+  ('Gris perla', '#eae7e3'),
+  ('Gris claro', '#d3d0cb'),
+  ('Gris', '#9e9a94'),
+  ('Gris oscuro', '#5f5b57'),
+  ('Carbón', '#33302e'),
+  ('Negro', '#181614'),
+  ('Rosa bebé', '#f8dfe8'),
+  ('Rosa palo', '#e9bcc2'),
+  ('Rosa', '#f6c3d6'),
+  ('Rosa fuerte', '#e884a8'),
+  ('Frambuesa', '#c9426b'),
+  ('Cereza', '#ae2d45'),
+  ('Fucsia', '#d63384'),
+  ('Magenta', '#a02a8c'),
+  ('Lila', '#d9c4f0'),
+  ('Lavanda', '#c3b5e8'),
+  ('Violeta', '#9166c9'),
+  ('Morado', '#6b3fa0'),
+  ('Ciruela', '#7c3b63'),
+  ('Berenjena', '#55304a'),
+  ('Coral', '#f28b7d'),
+  ('Salmón', '#f4a58f'),
+  ('Durazno', '#fbcfb8'),
+  ('Naranja', '#f09a4b'),
+  ('Terracota', '#b96a4f'),
+  ('Ladrillo', '#9c4b3c'),
+  ('Rojo', '#cf3b3b'),
+  ('Mostaza', '#d9a52b'),
+  ('Ocre', '#bd8b3c'),
+  ('Ámbar', '#e3a13c'),
+  ('Amarillo', '#f4d94a'),
+  ('Manteca', '#f7e29b'),
+  ('Dorado', '#d4af37'),
+  ('Menta', '#c5ebd9'),
+  ('Verde agua', '#a8ddcf'),
+  ('Salvia', '#bfd8bd'),
+  ('Verde lima', '#c6dd7b'),
+  ('Verde pastel', '#d8e8c4'),
+  ('Verde oliva', '#9a9d52'),
+  ('Verde musgo', '#6f7d4e'),
+  ('Verde esmeralda', '#3f9c78'),
+  ('Verde jungle', '#2f6b52'),
+  ('Celeste', '#bcdaf4'),
+  ('Celeste pastel', '#d8ecfa'),
+  ('Aguamarina', '#9ddcd7'),
+  ('Turquesa', '#57bfb4'),
+  ('Azul cielo', '#7fb8e8'),
+  ('Azul cobalto', '#3f6fc4'),
+  ('Azul', '#3d5fa8'),
+  ('Azul petróleo', '#2f6b78'),
+  ('Azul marino', '#263656'),
+  ('Café con leche', '#cfb295'),
+  ('Caramelo', '#b9834f'),
+  ('Avellana', '#9c6b4a'),
+  ('Cognac', '#a4613b'),
+  ('Café', '#7a5238'),
+  ('Chocolate', '#4d3324'),
+  ('Tabaco', '#6b4a34'),
+  ('Plata', '#c9c9cd'),
+  ('Oro', '#c8a951'),
+  ('Bronce', '#a9753c')
+) AS v(name, hex)
+WHERE NOT EXISTS (
+  SELECT 1 FROM colors c WHERE lower(trim(c.name)) = lower(trim(v.name))
+);

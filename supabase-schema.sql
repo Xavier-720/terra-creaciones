@@ -158,7 +158,8 @@ INSERT INTO colors (id, name, hex) VALUES
   (6, 'Rosa', '#f6c3d6'),
   (7, 'Crema', '#fbf3e4'),
   (8, 'Salvia', '#bfd8bd'),
-  (9, 'Blanco roto', '#f0ebf3')
+  (9, 'Blanco roto', '#f0ebf3'),
+  (10, 'Plata', '#c9c9cd')
 ON CONFLICT (id) DO NOTHING;
 
 -- Ajustar la secuencia de colores al máximo id
@@ -169,13 +170,17 @@ INSERT INTO products (slug, name, description, shape, featured, category_id)
 SELECT v.slug, v.name, v.descr, v.shape, v.featured, c.id
 FROM (VALUES
   ('bolso-sol', 'Bolso Sol', 'Bolso grande tejido en punto rombo, ideal para el día a día. Asas reforzadas.', 'BAG', true, 'bolsos'),
-  ('bolso-mar', 'Bolso Mar', 'Tote liviano con franjas suaves, forrado por dentro con cierre.', 'BAG', false, 'bolsos'),
-  ('bolso-flor', 'Bolso Flor', 'Bolso con flores aplicadas a mano en cada costado.', 'BAG', false, 'bolsos'),
+  ('bolso-mar', 'Bolso Mar', 'Tote liviano con franjas suaves, forrado por dentro con cierre.', 'BAG', true, 'bolsos'),
+  ('bolso-flor', 'Bolso Flor', 'Bolso con flores aplicadas a mano en cada costado.', 'BAG', true, 'bolsos'),
   ('cartera-nube', 'Cartera Nube', 'Cartera chica con solapa y cierre magnético, entra lo justo y necesario.', 'WALLET', true, 'carteras'),
-  ('cartera-durazno', 'Cartera Durazno', 'Cartera mediana con correa larga para llevar cruzada.', 'WALLET', false, 'carteras'),
-  ('cartera-brisa', 'Cartera Brisa', 'Monedero y tarjetero en una sola pieza, tejido compacto.', 'WALLET', false, 'carteras'),
+  ('cartera-durazno', 'Cartera Durazno', 'Cartera mediana con correa larga para llevar cruzada.', 'WALLET', true, 'carteras'),
+  ('cartera-brisa', 'Cartera Brisa', 'Monedero y tarjetero en una sola pieza, tejido compacto.', 'WALLET', true, 'carteras'),
   ('llavero-osito', 'Llavero Osito', 'Amigurumi de 7 cm con argolla metálica. Se pide por color.', 'TOY', true, 'otros'),
-  ('posavasos-flor', 'Posavasos Flor', 'Set de 4 posavasos en forma de flor, lavables.', 'COASTER', true, 'otros')
+  ('posavasos-flor', 'Posavasos Flor', 'Set de 4 posavasos en forma de flor, lavables.', 'COASTER', true, 'otros'),
+  ('bolso-luna', 'Bolso Luna', 'Bolso redondo con detalle de luna bordada y cadena delicada.', 'BAG', true, 'bolsos'),
+  ('cartera-petalo', 'Cartera Pétalo', 'Cartera de solapa redondeada con flores diminutas tejidas.', 'WALLET', true, 'carteras'),
+  ('amigurumi-flor', 'Amigurumi Flor', 'Flor tejida a mano con tallo flexible, ideal como regalo.', 'TOY', true, 'otros'),
+  ('posavasos-duo', 'Set Posavasos Duo', 'Dos posavasos translatorios con espiral en tonos suaves.', 'COASTER', true, 'otros')
 ) AS v(slug, name, descr, shape, featured, cat)
 JOIN categories c ON c.slug = v.cat
 ON CONFLICT (slug) DO NOTHING;
@@ -190,7 +195,11 @@ SELECT p.id, v.pos, c.id FROM (VALUES
   ('cartera-durazno',0,'Durazno'),('cartera-durazno',1,'Crema'),('cartera-durazno',2,'Salvia'),
   ('cartera-brisa',0,'Celeste'),('cartera-brisa',1,'Blanco roto'),
   ('llavero-osito',0,'Durazno'),('llavero-osito',1,'Crema'),('llavero-osito',2,'Rosa'),
-  ('posavasos-flor',0,'Manteca'),('posavasos-flor',1,'Menta'),('posavasos-flor',2,'Rosa'),('posavasos-flor',3,'Lila')
+  ('posavasos-flor',0,'Manteca'),('posavasos-flor',1,'Menta'),('posavasos-flor',2,'Rosa'),('posavasos-flor',3,'Lila'),
+  ('bolso-luna',0,'Lila'),('bolso-luna',1,'Crema'),('bolso-luna',2,'Plata'),
+  ('cartera-petalo',0,'Rosa'),('cartera-petalo',1,'Crema'),('cartera-petalo',2,'Salvia'),
+  ('amigurumi-flor',0,'Manteca'),('amigurumi-flor',1,'Rosa'),('amigurumi-flor',2,'Menta'),
+  ('posavasos-duo',0,'Celeste'),('posavasos-duo',1,'Crema'),('posavasos-duo',2,'Durazno')
 ) AS v(slug, pos, color)
 JOIN products p ON p.slug = v.slug
 JOIN colors c ON c.name = v.color
@@ -205,7 +214,11 @@ SELECT p.id, v.pos, v.feature FROM (VALUES
   ('cartera-nube',0,'Cierre magnético'),
   ('cartera-durazno',0,'Correa larga ajustable'),
   ('llavero-osito',0,'Altura: 7 cm'),
-  ('posavasos-flor',0,'Set de 4 unidades')
+  ('posavasos-flor',0,'Set de 4 unidades'),
+  ('bolso-luna',0,'Cierre con broche'),('bolso-luna',1,'Medidas: 24 x 24 cm (ejemplo)'),
+  ('cartera-petalo',0,'Forro de algodón'),('cartera-petalo',1,'Cierre magnético'),
+  ('amigurumi-flor',0,'Altura: 12 cm (ejemplo)'),
+  ('posavasos-duo',0,'Set de 2 unidades'),('posavasos-duo',1,'Lavables a mano')
 ) AS v(slug, pos, feature)
 JOIN products p ON p.slug = v.slug
 ON CONFLICT (product_id, position) DO NOTHING;

@@ -247,7 +247,8 @@ export async function createProduct(input: ProductDraftInput): Promise<Product> 
       position,
       feature,
     }));
-    await supabase.from('product_features').insert(featRows);
+    const { error: featError } = await supabase.from('product_features').insert(featRows);
+    if (featError) throw featError;
   }
 
   if (input.colorIds.length > 0) {
@@ -256,7 +257,8 @@ export async function createProduct(input: ProductDraftInput): Promise<Product> 
       position,
       color_id,
     }));
-    await supabase.from('product_colors').insert(colRows);
+    const { error: colorError } = await supabase.from('product_colors').insert(colRows);
+    if (colorError) throw colorError;
   }
 
   const res = await getProductBySlug(slug);
@@ -279,7 +281,8 @@ export async function updateProduct(id: number, input: ProductDraftInput): Promi
   if (pError) throw pError;
 
   // Actualizar características
-  await supabase.from('product_features').delete().eq('product_id', id);
+  const { error: deleteFeaturesError } = await supabase.from('product_features').delete().eq('product_id', id);
+  if (deleteFeaturesError) throw deleteFeaturesError;
   const cleanFeatures = input.features.map(f => f.trim()).filter(Boolean);
   if (cleanFeatures.length > 0) {
     const featRows = cleanFeatures.map((feature, position) => ({
@@ -287,24 +290,29 @@ export async function updateProduct(id: number, input: ProductDraftInput): Promi
       position,
       feature,
     }));
-    await supabase.from('product_features').insert(featRows);
+    const { error: featError } = await supabase.from('product_features').insert(featRows);
+    if (featError) throw featError;
   }
 
   // Actualizar colores
-  await supabase.from('product_colors').delete().eq('product_id', id);
+  const { error: deleteColorsError } = await supabase.from('product_colors').delete().eq('product_id', id);
+  if (deleteColorsError) throw deleteColorsError;
   if (input.colorIds.length > 0) {
     const colRows = input.colorIds.map((color_id, position) => ({
       product_id: id,
       position,
       color_id,
     }));
-    await supabase.from('product_colors').insert(colRows);
+    const { error: colorError } = await supabase.from('product_colors').insert(colRows);
+    if (colorError) throw colorError;
   }
 }
 
 export async function deleteProduct(id: number): Promise<void> {
-  await supabase.from('product_features').delete().eq('product_id', id);
-  await supabase.from('product_colors').delete().eq('product_id', id);
+  const { error: featuresError } = await supabase.from('product_features').delete().eq('product_id', id);
+  if (featuresError) throw featuresError;
+  const { error: colorsError } = await supabase.from('product_colors').delete().eq('product_id', id);
+  if (colorsError) throw colorsError;
   const { error } = await supabase.from('products').delete().eq('id', id);
   if (error) throw error;
 }

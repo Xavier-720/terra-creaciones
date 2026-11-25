@@ -7,10 +7,11 @@ export default function ConfirmButton({ onConfirm, children }: { onConfirm: () =
     <button
       type="button"
       className="sm danger"
+      title={armed ? 'Tocá otra vez para confirmar' : undefined}
       onBlur={() => setArmed(false)}
       onClick={() => { if (armed) { setArmed(false); onConfirm(); } else setArmed(true); }}
     >
-      {armed ? '¿Seguro? Tocá otra vez' : children}
+      {armed ? '¿Seguro?' : children}
     </button>
   );
 }

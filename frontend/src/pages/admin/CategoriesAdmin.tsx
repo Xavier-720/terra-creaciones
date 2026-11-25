@@ -33,7 +33,7 @@ function Row({ category, onError, onDone }: { category: Category; onError: (e: u
       <div className="item">
         <button
           type="button"
-          className="sm"
+          className="sm emoji-toggle"
           style={{ fontSize: '1.4rem', padding: '4px 10px', minWidth: 46 }}
           title="Cambiar ícono"
           onClick={() => setShowPicker(!showPicker)}

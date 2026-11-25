@@ -203,7 +203,7 @@ export default function ProductsAdmin() {
       </div>
       {message && <p className="msg" aria-live="polite">{message}</p>}
       {products.data?.map(p => (
-        <div className="item" key={p.id}>
+        <div className="item product-item" key={p.id}>
           <span className="mini">
             <ProductVisual name={p.name} shape={p.shape} colors={p.colors} imageUrl={p.imageUrl} />
           </span>
@@ -211,13 +211,15 @@ export default function ProductsAdmin() {
             <strong>{p.name}</strong><br />
             <small>{p.category?.name ?? 'Sin categoría'}{p.featured ? ' · en el inicio' : ''}</small>
           </div>
-          <button type="button" className="sm" onClick={() => toggleFeatured.mutate(p)}>
-            {p.featured ? 'Sacar del inicio' : 'Mostrar en inicio'}
-          </button>
-          <button type="button" className="sm" onClick={() => { setMessage(''); setDraft(toDraft(p)); }}>
-            Editar
-          </button>
-          <ConfirmButton onConfirm={() => remove.mutate(p.id)}>Eliminar</ConfirmButton>
+          <div className="row item-actions">
+            <button type="button" className="sm" onClick={() => toggleFeatured.mutate(p)}>
+              {p.featured ? 'Sacar del inicio' : 'Mostrar en inicio'}
+            </button>
+            <button type="button" className="sm" onClick={() => { setMessage(''); setDraft(toDraft(p)); }}>
+              Editar
+            </button>
+            <ConfirmButton onConfirm={() => remove.mutate(p.id)}>Eliminar</ConfirmButton>
+          </div>
         </div>
       ))}
       {products.data?.length === 0 && <p>Todavía no hay productos cargados en Supabase.</p>}

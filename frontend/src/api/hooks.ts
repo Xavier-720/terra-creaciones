@@ -12,7 +12,7 @@ export const useSettings = () => useQuery<Settings>({ queryKey: ['settings'], qu
 export const useProducts = () => useQuery<Product[]>({ queryKey: ['products'], queryFn: async () => (await getProducts()) as Product[] });
 // Trae un solo producto por su slug; no reintenta si no lo encuentra.
 export const useProduct = (slug: string) =>
-  useQuery<Product>({ queryKey: ['product', slug], queryFn: async () => (await getProductBySlug(slug)) as unknown as Product, retry: false });
+  useQuery<Product | null>({ queryKey: ['product', slug], queryFn: () => getProductBySlug(slug), retry: false });
 
 /** Refresca todo el catálogo después de un cambio en el panel de administración. */
 export function useRefreshCatalog() {

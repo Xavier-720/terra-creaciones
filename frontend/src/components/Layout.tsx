@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useCategories, useSettings } from '../api/hooks';
 import { useAuth } from '../context/AuthContext';
-import { isAdmin, mapsLink, waLink } from '../lib';
+import { isAdmin, mapsLink, userDisplayName, userInitials, waLink } from '../lib';
 import Watermarks from './Watermarks';
 
 // Muestra el menú, el contenido de cada página y el pie con los datos del local.
@@ -15,10 +15,36 @@ export default function Layout() {
   const { user, signOut } = useAuth();
   // Dirección actual, para volver arriba cuando cambia.
   const { pathname } = useLocation();
-  // Vuelve arriba cada vez que se abre una página distinta.
+  // Permite volver al inicio después de cerrar la sesión.
+  const navigate = useNavigate();
+  // Estado del menú de la cuenta y referencia para cerrarlo al tocar fuera.
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  // Vuelve arriba y cierra el menú cada vez que se abre una página distinta.
   useEffect(() => {
     window.scrollTo(0, 0);
+    setAccountOpen(false);
   }, [pathname]);
+
+  // Cierra el menú de la cuenta al tocar en cualquier otro lugar.
+  useEffect(() => {
+    if (!accountOpen) return;
+    const close = (event: MouseEvent) => {
+      if (!accountRef.current?.contains(event.target as Node)) setAccountOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [accountOpen]);
+
+  // Cierra la sesión y vuelve al inicio (para no quedarse en una página de admin).
+  const logout = async () => {
+    setAccountOpen(false);
+    await signOut();
+    navigate('/');
+  };
+
+  const displayName = userDisplayName(user);
 
   return (
     <>
@@ -38,10 +64,40 @@ export default function Layout() {
               </NavLink>
             ))}
             {isAdmin(user) && <NavLink to="/admin" className={({ isActive }) => `pill${isActive ? ' on' : ''}`}>⚙️ Admin</NavLink>}
-            {user
-              ? <button type="button" className="pill" onClick={() => void signOut()}>Salir</button>
-              : <NavLink to="/ingresar" className={({ isActive }) => `pill${isActive ? ' on' : ''}`}>👤 Ingresar</NavLink>}
           </nav>
+          <div className="nav-actions">
+            {user ? (
+              <div className="account" ref={accountRef}>
+                <button
+                  type="button"
+                  className="avatar"
+                  aria-haspopup="menu"
+                  aria-expanded={accountOpen}
+                  aria-label={`Sesión iniciada como ${displayName}${user.email ? ` (${user.email})` : ''}`}
+                  title={`Sesión iniciada como ${displayName}`}
+                  onClick={() => setAccountOpen(open => !open)}
+                >
+                  {userInitials(user)}
+                </button>
+                {accountOpen && (
+                  <div className="account-menu" role="menu">
+                    <p className="name">Hola, {displayName}</p>
+                    {user.email && <p className="email">{user.email}</p>}
+                    {isAdmin(user) && (
+                      <NavLink to="/admin" role="menuitem" className="sm" onClick={() => setAccountOpen(false)}>
+                        ⚙️ Panel de administración
+                      </NavLink>
+                    )}
+                    <button type="button" role="menuitem" className="sm" onClick={() => void logout()}>
+                      Salir de la cuenta
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <NavLink to="/ingresar" className={({ isActive }) => `pill${isActive ? ' on' : ''}`}>👤 Ingresar</NavLink>
+            )}
+          </div>
         </div>
       </header>
       <main className="wrap"><Outlet /></main>

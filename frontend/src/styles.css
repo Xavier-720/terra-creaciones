@@ -2,6 +2,7 @@
   color-scheme: light;
   --bg: #f0e3d2;
   --card: #fffbf6;
+  --panel: #fffbf6;
   --ink: #43322a;
   --mut: #7a6556;
   --lil: #e6d1b8;
@@ -41,19 +42,20 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0a0b0d;
-  --card: #151619;
-  --ink: #f5f5f7;
-  --mut: #b9bac1;
-  --lil: #1b1c20;
-  --line: #34353b;
+  --bg: #16171a;
+  --card: #232a2f;
+  --panel: #2c3439;
+  --ink: #f6f7f8;
+  --mut: #c2c8cd;
+  --lil: #262b2f;
+  --line: #3d454b;
   --ac: #d9bb8a;
   --acd: #f3d8a8;
   --wa: #34d399;
-  --header: #111216;
-  --header-line: #2c2d33;
+  --header: #1d1e22;
+  --header-line: #33383d;
   --logo-border: #d9bb8a;
-  --logo-bg: #1d1e22;
+  --logo-bg: #24282d;
   --brand: #f7f7f9;
   --stroke: #dedee4;
   --shadow: #000000;
@@ -75,7 +77,7 @@
   --wm-opacity: .07;
   --shadow-soft: rgba(0, 0, 0, .55);
   --shadow-menu: rgba(0, 0, 0, .75);
-  --toggle-bg: #292a2f;
+  --toggle-bg: #2c3439;
   --toggle-knob: #f5f5f7;
   --toggle-icon: #151619;
 }
@@ -205,7 +207,7 @@ button.pill { cursor: pointer; }
   top: calc(100% + 10px);
   right: 0;
   width: min(260px, calc(100vw - 28px));
-  background: var(--card);
+  background: var(--panel);
   border: 2px solid var(--stroke);
   border-radius: 14px;
   box-shadow: 0 8px 24px var(--shadow-menu);
@@ -290,7 +292,7 @@ h2 { font-size: clamp(1.7rem, 5.5vw, 2.2rem); margin-bottom: 18px; color: var(--
   border-radius: 14px;
   border: 2px solid var(--stroke);
   box-shadow: 0 3px 0 var(--shadow);
-  background: var(--card);
+  background: var(--panel);
   color: var(--ink);
   cursor: pointer;
   transition: transform .15s, background .15s;
@@ -323,7 +325,7 @@ footer { padding: 20px 0 30px; color: var(--mut); text-align: center; font-size:
   padding: 10px 12px;
   border: 2px solid var(--stroke);
   border-radius: 12px;
-  background: var(--card);
+  background: var(--panel);
   color: var(--ink);
 }
 .adm input[type=checkbox] { width: auto; margin: 0; accent-color: var(--ac); }
@@ -342,7 +344,7 @@ footer { padding: 20px 0 30px; color: var(--mut); text-align: center; font-size:
   border-radius: 14px;
   padding: 10px;
   margin-bottom: 10px;
-  background: var(--card);
+  background: var(--panel);
 }
 .item > * { min-width: 0; }
 .item .grow { flex: 1 1 auto; overflow-wrap: anywhere; }
@@ -355,7 +357,7 @@ footer { padding: 20px 0 30px; color: var(--mut); text-align: center; font-size:
   padding: 8px 14px;
   border-radius: 12px;
   border: 2px solid var(--stroke);
-  background: var(--card);
+  background: var(--panel);
   color: var(--ink);
   cursor: pointer;
   max-width: 100%;
@@ -364,7 +366,7 @@ footer { padding: 20px 0 30px; color: var(--mut); text-align: center; font-size:
 }
 .sm.danger { background: var(--danger-bg); color: var(--danger-ink); }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
-.adm .chip { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 600; border: 2px solid var(--line); border-radius: 12px; padding: 6px 10px; background: var(--card); color: var(--ink); max-width: 100%; overflow-wrap: anywhere; }
+.adm .chip { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 600; border: 2px solid var(--line); border-radius: 12px; padding: 6px 10px; background: var(--panel); color: var(--ink); max-width: 100%; overflow-wrap: anywhere; }
 .adm .chip.editing { border-color: var(--ac); background: var(--lil); }
 .chip-action {
   width: 24px;
@@ -372,7 +374,7 @@ footer { padding: 20px 0 30px; color: var(--mut); text-align: center; font-size:
   padding: 0;
   border-radius: 50%;
   border: 1.5px solid var(--stroke);
-  background: var(--card);
+  background: var(--panel);
   color: var(--ink);
   font: 700 .9rem/1 Nunito, sans-serif;
   cursor: pointer;
@@ -385,7 +387,7 @@ footer { padding: 20px 0 30px; color: var(--mut); text-align: center; font-size:
 .color-editor {
   display: grid;
   gap: 8px;
-  background: var(--card);
+  background: var(--panel);
   border: 2px solid var(--line);
   border-radius: 14px;
   padding: 12px;
@@ -403,7 +405,7 @@ footer { padding: 20px 0 30px; color: var(--mut); text-align: center; font-size:
   padding: 9px 10px;
   border: 2px solid var(--stroke);
   border-radius: 12px;
-  background: var(--card);
+  background: var(--panel);
   color: var(--ink);
 }
 .add-color input[type=color] { flex: 0 0 56px; height: 44px; padding: 2px; }
@@ -425,7 +427,7 @@ footer { padding: 20px 0 30px; color: var(--mut); text-align: center; font-size:
   padding: 10px 12px;
   border: 2px solid var(--stroke);
   border-radius: 12px;
-  background: var(--card);
+  background: var(--panel);
   color: var(--ink);
 }
 .form-narrow .btn { width: 100%; margin-top: 10px; }

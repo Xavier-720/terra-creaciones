@@ -407,11 +407,11 @@ export async function ensureShowcaseExamples(): Promise<number> {
     added++;
   }
 
-  // Marca destacados los que falten para llegar a 12, sin sacarle el destacado a nadie.
+  // Asegura que los 12 ejemplos estén marcados como destacados (lo mismo que muestra el inicio).
   const all = await getProducts();
-  const featuredCount = all.filter(p => p.featured).length;
-  const fill = all.filter(p => !p.featured).slice(0, Math.max(0, 12 - featuredCount));
-  for (const product of fill) {
+  for (const example of SHOWCASE_EXAMPLES) {
+    const product = all.find(p => p.slug === example.slug);
+    if (!product || product.featured) continue;
     const { error } = await supabase.from('products').update({ featured: true }).eq('id', product.id);
     if (error) throw error;
   }

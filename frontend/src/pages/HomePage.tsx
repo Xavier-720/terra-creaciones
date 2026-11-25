@@ -12,8 +12,8 @@ export default function HomePage() {
   if (categories.isError || products.isError) return <p className="status">No pudimos cargar el catálogo. Probá de nuevo en un momento.</p>;
 
   const list = products.data ?? [];
-  // Muestra hasta 12 destacados: primero los marcados como tales y después se completa con el catálogo.
-  const featured = [...list.filter(p => p.featured), ...list.filter(p => !p.featured)].slice(0, 12);
+  // Muestra solo los productos marcados como destacados (máximo 12), igual que indica el panel.
+  const featured = list.filter(p => p.featured).slice(0, 12);
   // Cuenta cuántos modelos tiene una categoría.
   const count = (id: number) => list.filter(p => p.category.id === id).length;
 

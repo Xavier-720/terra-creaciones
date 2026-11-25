@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import {
   createColor,
@@ -63,6 +63,7 @@ export default function ProductsAdmin() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [message, setMessage] = useState('');
   const [detecting, setDetecting] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   // Colores creados durante la detección: se muestran antes de que se recargue el catálogo.
   const [extraColors, setExtraColors] = useState<ColorT[]>([]);
   const [editingColorId, setEditingColorId] = useState<number | null>(null);
@@ -79,6 +80,25 @@ export default function ProductsAdmin() {
     setExtraColors([]);
     setEditingColorId(null);
   };
+
+  // Prepara los 12 destacados una sola vez y refresca la caché antes de permitir cambios.
+  useEffect(() => {
+    let active = true;
+    let ready = false;
+    try { ready = localStorage.getItem('terra-showcase-ready') === '1'; } catch { /* sin almacenamiento */ }
+    if (ready) return;
+    setSeeding(true);
+    void ensureShowcaseExamples()
+      .then(() => {
+        if (!active) return;
+        refresh();
+        setMessage('Destacados listos: hay 12 productos en el inicio.');
+        try { localStorage.setItem('terra-showcase-ready', '1'); } catch { /* ignorar */ }
+      })
+      .catch(() => { if (active) setMessage('No se pudieron preparar los destacados. Podés intentarlo con el botón.'); })
+      .finally(() => { if (active) setSeeding(false); });
+    return () => { active = false; };
+  }, []);
 
   // Crea un producto nuevo o guarda los cambios de uno existente en Supabase.
   const save = useMutation({
@@ -117,7 +137,10 @@ export default function ProductsAdmin() {
   // Muestra un producto en el inicio o lo saca de ahí.
   const toggleFeatured = useMutation({
     mutationFn: (p: Product) => toggleProductFeatured(p.id, p.featured),
-    onSuccess: () => refresh(),
+    onSuccess: (_data, product) => {
+      setMessage(product.featured ? 'Producto sacado del inicio.' : 'Producto agregado al inicio.');
+      refresh();
+    },
     onError: fail,
   });
 
@@ -315,6 +338,7 @@ export default function ProductsAdmin() {
         <button
           type="button"
           className="btn"
+          disabled={seeding}
           onClick={() => {
             closeDraft();
             setDraft(emptyDraft(categories.data?.[0]?.id ?? null));
@@ -322,11 +346,11 @@ export default function ProductsAdmin() {
         >
           + Nuevo producto
         </button>
-        <button type="button" className="sm" disabled={seedExamples.isPending} onClick={() => seedExamples.mutate()}>
+        <button type="button" className="sm" disabled={seeding || seedExamples.isPending} onClick={() => seedExamples.mutate()}>
           {seedExamples.isPending ? 'Cargando ejemplos…' : 'Completar 12 destacados'}
         </button>
       </div>
-      {message && <p className="msg" aria-live="polite">{message}</p>}
+      {(seeding || message) && <p className="msg" aria-live="polite">{seeding ? 'Preparando los 12 destacados…' : message}</p>}
       {products.data?.map(p => (
         <div className="item product-item" key={p.id}>
           <span className="mini">
@@ -337,7 +361,7 @@ export default function ProductsAdmin() {
             <small>{p.category?.name ?? 'Sin categoría'}{p.featured ? ' · en el inicio' : ''}</small>
           </div>
           <div className="row item-actions">
-            <button type="button" className="sm" onClick={() => toggleFeatured.mutate(p)}>
+            <button type="button" className="sm" disabled={seeding || toggleFeatured.isPending} onClick={() => toggleFeatured.mutate(p)}>
               {p.featured ? 'Sacar del inicio' : 'Mostrar en inicio'}
             </button>
             <button type="button" className="sm" onClick={() => { setMessage(''); setDraft(toDraft(p)); }}>

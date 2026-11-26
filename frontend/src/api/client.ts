@@ -1,6 +1,7 @@
 import { supabase } from './supabaseClient';
 import { EXTRA_COLORS } from '../colors';
 import { SHOWCASE_EXAMPLES } from '../examples';
+import { getFeaturedOverride, setFeaturedOverride } from '../featuredOverride';
 import type { Category, ColorT, Product, Settings, Shape } from '../types';
 
 // Normaliza texto para crear slugs legibles en URL (ej: "Bolsos de mano" -> "bolsos-de-mano")
@@ -100,7 +101,11 @@ export async function getProducts(categoryId?: string | number): Promise<Product
   }
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []).map(mapProduct);
+  return (data ?? []).map(row => {
+    const product = mapProduct(row);
+    const override = getFeaturedOverride(product.id);
+    return override === undefined ? product : { ...product, featured: override };
+  });
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -330,9 +335,23 @@ export async function deleteProduct(id: number): Promise<void> {
   if (error) throw error;
 }
 
-export async function toggleProductFeatured(id: number, currentFeatured: boolean): Promise<void> {
-  const { error } = await supabase.from('products').update({ featured: !currentFeatured }).eq('id', id);
-  if (error) throw error;
+export type FeaturedUpdate = { source: 'supabase' | 'local' };
+
+export async function toggleProductFeatured(id: number, currentFeatured: boolean): Promise<FeaturedUpdate> {
+  const expected = !currentFeatured;
+  // `.select()` permite detectar cuando RLS bloquea el UPDATE y no modifica filas.
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .update({ featured: expected })
+      .eq('id', id)
+      .select('id, featured');
+    if (!error && data?.length && data[0].featured === expected) return { source: 'supabase' };
+  } catch {
+    // Si falla la red, igual aplicamos el respaldo local.
+  }
+  setFeaturedOverride(id, expected);
+  return { source: 'local' };
 }
 
 // Subida de imágenes a Supabase Storage con fallback a base64
@@ -404,6 +423,7 @@ export async function ensureShowcaseExamples(): Promise<number> {
       const { error: colorError } = await supabase.from('product_colors').insert(colorRows);
       if (colorError) throw colorError;
     }
+    setFeaturedOverride(Number(data.id), true);
     added++;
   }
 
@@ -412,6 +432,7 @@ export async function ensureShowcaseExamples(): Promise<number> {
   for (const example of SHOWCASE_EXAMPLES) {
     const product = all.find(p => p.slug === example.slug);
     if (!product || product.featured) continue;
+    setFeaturedOverride(product.id, true);
     const { error } = await supabase.from('products').update({ featured: true }).eq('id', product.id);
     if (error) throw error;
   }

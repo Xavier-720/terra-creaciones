@@ -42,7 +42,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      // Siempre limpiamos el estado local, aunque Supabase falle al cerrar la sesión.
+      setUser(null);
+      setSession(null);
+    }
   };
 
   return (

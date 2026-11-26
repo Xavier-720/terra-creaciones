@@ -38,11 +38,15 @@ export default function Layout() {
     return () => document.removeEventListener('mousedown', close);
   }, [accountOpen]);
 
-  // Cierra la sesión y vuelve al inicio (para no quedarse en una página de admin).
+  // Cierra la sesión y vuelve al inicio aunque Supabase no responda.
   const logout = async () => {
     setAccountOpen(false);
-    await signOut();
-    navigate('/');
+    try {
+      await signOut();
+    } catch (err) {
+      console.warn('No se pudo cerrar la sesión en Supabase:', err);
+    }
+    navigate('/', { replace: true });
   };
 
   const displayName = userDisplayName(user);

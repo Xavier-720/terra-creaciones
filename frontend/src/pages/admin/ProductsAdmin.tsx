@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createColor,
   createProduct,
@@ -60,10 +60,10 @@ export default function ProductsAdmin() {
   const categories = useCategories();
   const colors = useColors();
   const refresh = useRefreshCatalog();
+  const queryClient = useQueryClient();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [message, setMessage] = useState('');
   const [detecting, setDetecting] = useState(false);
-  const [seeding, setSeeding] = useState(false);
   // Colores creados durante la detección: se muestran antes de que se recargue el catálogo.
   const [extraColors, setExtraColors] = useState<ColorT[]>([]);
   const [editingColorId, setEditingColorId] = useState<number | null>(null);
@@ -80,25 +80,6 @@ export default function ProductsAdmin() {
     setExtraColors([]);
     setEditingColorId(null);
   };
-
-  // Prepara los 12 destacados una sola vez y refresca la caché antes de permitir cambios.
-  useEffect(() => {
-    let active = true;
-    let ready = false;
-    try { ready = localStorage.getItem('terra-showcase-ready') === '1'; } catch { /* sin almacenamiento */ }
-    if (ready) return;
-    setSeeding(true);
-    void ensureShowcaseExamples()
-      .then(() => {
-        if (!active) return;
-        refresh();
-        setMessage('Destacados listos: hay 12 productos en el inicio.');
-        try { localStorage.setItem('terra-showcase-ready', '1'); } catch { /* ignorar */ }
-      })
-      .catch(() => { if (active) setMessage('No se pudieron preparar los destacados. Podés intentarlo con el botón.'); })
-      .finally(() => { if (active) setSeeding(false); });
-    return () => { active = false; };
-  }, []);
 
   // Crea un producto nuevo o guarda los cambios de uno existente en Supabase.
   const save = useMutation({
@@ -135,13 +116,29 @@ export default function ProductsAdmin() {
   });
 
   // Muestra un producto en el inicio o lo saca de ahí.
+  // El cambio se aplica al caché primero para que el botón responda al instante;
+  // si Supabase lo rechaza, se vuelve al estado anterior y se muestra el error.
   const toggleFeatured = useMutation({
     mutationFn: (p: Product) => toggleProductFeatured(p.id, p.featured),
-    onSuccess: (_data, product) => {
-      setMessage(product.featured ? 'Producto sacado del inicio.' : 'Producto agregado al inicio.');
+    onMutate: async (product) => {
+      await queryClient.cancelQueries({ queryKey: ['products'] });
+      const previous = queryClient.getQueryData<Product[]>(['products']);
+      queryClient.setQueryData<Product[]>(['products'], old =>
+        (old ?? []).map(p => p.id === product.id ? { ...p, featured: !product.featured } : p),
+      );
+      return { previous, nextFeatured: !product.featured };
+    },
+    onSuccess: (result, _product, context) => {
+      const action = context?.nextFeatured ? 'Producto agregado al inicio.' : 'Producto sacado del inicio.';
+      setMessage(result.source === 'local'
+        ? `${action} Se guardó en este dispositivo; revisá los permisos de Supabase para sincronizarlo.`
+        : action);
       refresh();
     },
-    onError: fail,
+    onError: (error, _product, context) => {
+      if (context?.previous) queryClient.setQueryData(['products'], context.previous);
+      setMessage(`No se pudo actualizar el inicio: ${error instanceof Error ? error.message : 'error desconocido'}`);
+    },
   });
 
   // Carga los ejemplos que faltan y completa 12 productos destacados.
@@ -314,7 +311,7 @@ export default function ProductsAdmin() {
         <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <input type="checkbox" checked={draft.featured} onChange={e => set({ featured: e.target.checked })} /> Mostrar en el inicio
         </label>
-        {message && <p className="msg" aria-live="polite">{message}</p>}
+        {message && <p className={`msg${message.startsWith('No se pudo') || message.includes('permisos') ? ' error' : ''}`} role="alert" aria-live="polite">{message}</p>}
         <div className="row" style={{ marginTop: 18 }}>
           <button
             type="button"
@@ -338,7 +335,6 @@ export default function ProductsAdmin() {
         <button
           type="button"
           className="btn"
-          disabled={seeding}
           onClick={() => {
             closeDraft();
             setDraft(emptyDraft(categories.data?.[0]?.id ?? null));
@@ -346,11 +342,11 @@ export default function ProductsAdmin() {
         >
           + Nuevo producto
         </button>
-        <button type="button" className="sm" disabled={seeding || seedExamples.isPending} onClick={() => seedExamples.mutate()}>
+        <button type="button" className="sm" disabled={seedExamples.isPending} onClick={() => seedExamples.mutate()}>
           {seedExamples.isPending ? 'Cargando ejemplos…' : 'Completar 12 destacados'}
         </button>
       </div>
-      {(seeding || message) && <p className="msg" aria-live="polite">{seeding ? 'Preparando los 12 destacados…' : message}</p>}
+      {message && <p className={`msg${message.startsWith('No se pudo') || message.includes('permisos') ? ' error' : ''}`} role="alert" aria-live="polite">{message}</p>}
       {products.data?.map(p => (
         <div className="item product-item" key={p.id}>
           <span className="mini">
@@ -361,7 +357,7 @@ export default function ProductsAdmin() {
             <small>{p.category?.name ?? 'Sin categoría'}{p.featured ? ' · en el inicio' : ''}</small>
           </div>
           <div className="row item-actions">
-            <button type="button" className="sm" disabled={seeding || toggleFeatured.isPending} onClick={() => toggleFeatured.mutate(p)}>
+            <button type="button" className="sm" disabled={toggleFeatured.isPending} onClick={() => toggleFeatured.mutate(p)}>
               {p.featured ? 'Sacar del inicio' : 'Mostrar en inicio'}
             </button>
             <button type="button" className="sm" onClick={() => { setMessage(''); setDraft(toDraft(p)); }}>
